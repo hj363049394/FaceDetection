@@ -32,7 +32,6 @@
         android:layout_margin="10dp"
         android:layout_alignTop="@id/detect_btn"
         android:layout_toLeftOf="@id/detect_btn"
-        android:text="Tips:"
         android:gravity="center"/>
 
     <ImageView

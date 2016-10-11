@@ -33,9 +33,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     FrameLayout mFrameLayout;
     @InjectView(R.id.tip_tv)
     TextView mTipTv;
-
+// requestCode
     private static final int PICK_CODE = 0X110;
-
+// 图片的uri路径
     private String mCurrentPhotoStr ;
     private Bitmap mPhote;
 
@@ -88,7 +88,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         options.inJustDecodeBounds = false;
 //得到压缩后的图片
         mPhote = BitmapFactory.decodeFile(mCurrentPhotoStr,options);
-
 
     }
 
