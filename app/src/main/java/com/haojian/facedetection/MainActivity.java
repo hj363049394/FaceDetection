@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if (requestCode == PICK_CODE) {
             if ( intent != null){
-                 Uri uri = intent.getData();
+                Uri uri = intent.getData();
                 Cursor cursor =  getContentResolver().query(uri,null,null,null,null);
                 cursor.moveToFirst();
 
@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.get_image_btn:
 
                 Intent intent = new Intent(Intent.ACTION_PICK);
-                intent.setType("iamge/*");
+                intent.setType("image/*");
                 startActivityForResult(intent,PICK_CODE);
 
                 break;
