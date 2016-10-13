@@ -15,6 +15,7 @@ import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -109,46 +110,51 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             JSONArray faces = jsonObject.getJSONArray("face");
             int facesCount = faces.length();
             mTipTv.setText("find " + facesCount);
-            for (int i = 0 ;i < facesCount ;i++){
-                JSONObject face = faces.getJSONObject(i);
-                JSONObject position = face.getJSONObject("position");
-                // 取得center中的x、y
-                float x = (float) position.getJSONObject("center").getDouble("x"); // 脸部中心点x点相对图片的 x%
-                float y = (float) position.getJSONObject("center").getDouble("y");
 
-                float w = (float) position.getDouble("width"); // 相对百分比
-                float h = (float) position.getDouble("height");
+            if (facesCount > 0) {
+                for (int i = 0 ;i < facesCount ;i++){
+                    JSONObject face = faces.getJSONObject(i);
+                    JSONObject position = face.getJSONObject("position");
+                    // 取得center中的x、y
+                    float x = (float) position.getJSONObject("center").getDouble("x"); // 脸部中心点x点相对图片的 x%
+                    float y = (float) position.getJSONObject("center").getDouble("y");
 
-                x = x / 100 * bitmap.getWidth();
-                y = y / 100 * bitmap.getHeight();
+                    float w = (float) position.getDouble("width"); // 相对百分比
+                    float h = (float) position.getDouble("height");
 
-                w = w / 100 * bitmap.getWidth();
-                h = h / 100 * bitmap.getHeight();
+                    x = x / 100 * bitmap.getWidth();
+                    y = y / 100 * bitmap.getHeight();
 
-                // 绘制box
-                canvas.drawLine(x - w / 2,y - h / 2,x - w / 2,y + h / 2,mPaint);
-                canvas.drawLine(x - w / 2,y - h / 2,x + w / 2,y - h / 2,mPaint);
-                canvas.drawLine(x + w / 2,y - h / 2,x + w / 2,y + h / 2,mPaint);
-                canvas.drawLine(x - w / 2,y + h / 2,x + w / 2,y + h / 2,mPaint);
+                    w = w / 100 * bitmap.getWidth();
+                    h = h / 100 * bitmap.getHeight();
 
-                // age gender
-                int age = face.getJSONObject("attribute").getJSONObject("age").getInt("value");
-                String gender = face.getJSONObject("attribute").getJSONObject("gender").getString("value");
+                    // 绘制box
+                    canvas.drawLine(x - w / 2,y - h / 2,x - w / 2,y + h / 2,mPaint);
+                    canvas.drawLine(x - w / 2,y - h / 2,x + w / 2,y - h / 2,mPaint);
+                    canvas.drawLine(x + w / 2,y - h / 2,x + w / 2,y + h / 2,mPaint);
+                    canvas.drawLine(x - w / 2,y + h / 2,x + w / 2,y + h / 2,mPaint);
 
-                // 使用TextView方式添加age、gender信息到bitmap上面
-                Bitmap ageBitmap = buildAgeBitmap(age,"male".equals(gender));
-                // 缩放age的bitmap 否则图片大小不同age的尺寸不变
-                if (bitmap.getWidth() < mPhotoIv.getWidth() && bitmap.getHeight() <mPhotoIv.getHeight()){
-                    float ratio = Math.max(bitmap.getWidth() * 1.0f / mPhotoIv.getWidth(),bitmap.getHeight() * 1.0f / mPhotoIv.getHeight());
-                    ageBitmap = Bitmap.createScaledBitmap(ageBitmap,(int)(ageBitmap.getWidth() * ratio ),(int)(ageBitmap.getHeight() * ratio),true);
+                    // age gender
+                    int age = face.getJSONObject("attribute").getJSONObject("age").getInt("value");
+                    String gender = face.getJSONObject("attribute").getJSONObject("gender").getString("value");
+
+                    // 使用TextView方式添加age、gender信息到bitmap上面
+                    Bitmap ageBitmap = buildAgeBitmap(age,"male".equals(gender));
+                    // 缩放age的bitmap 否则图片大小不同age的尺寸不变
+                    if (bitmap.getWidth() < mPhotoIv.getWidth() && bitmap.getHeight() <mPhotoIv.getHeight()){
+                        float ratio = Math.max(bitmap.getWidth() * 1.0f / mPhotoIv.getWidth(),bitmap.getHeight() * 1.0f / mPhotoIv.getHeight());
+                        ageBitmap = Bitmap.createScaledBitmap(ageBitmap,(int)(ageBitmap.getWidth() * ratio ),(int)(ageBitmap.getHeight() * ratio),true);
+                    }
+
+                    canvas.drawBitmap(ageBitmap,x - ageBitmap.getWidth() / 2 ,y - h / 2 - ageBitmap.getHeight(),null);
+
+                    mPhote = bitmap;
                 }
-
-                canvas.drawBitmap(ageBitmap,x - ageBitmap.getWidth() / 2 ,y - h / 2 - ageBitmap.getHeight(),null);
-
-                mPhote = bitmap;
-
-
+            }else {
+                Toast.makeText(MainActivity.this,"No face find!Please choose a correct photo!",Toast.LENGTH_LONG).show();
             }
+
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -201,6 +207,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 int index = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
                 mCurrentPhotoStr = cursor.getString(index);
+                Log.d("TAG","mCurrentPhotoStr = " + mCurrentPhotoStr);
                 cursor.close();
 
                 reSizePhoto();
@@ -241,7 +248,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.detect_btn:
 
-                if (mCurrentPhotoStr != null && mCurrentPhotoStr.trim().equals("")){
+                if (mCurrentPhotoStr != null && !mCurrentPhotoStr.trim().equals("")){
 
 // 该回掉是在Thread的子线程中执行，该回调的success（绘制解析后的信息）、error（在TextView上显示）方法执行需要在UI线程，
 // 故需要使用Handler发送消息到UI线程执行操作
